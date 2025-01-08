@@ -65,9 +65,13 @@ def get_bing_news(query):
     return filtered_articles
 
 
-def get_newsapi_articles():
+def get_newsapi_articles(outlets_popularity):
+    if outlets_popularity == "Top 10%":
+        priority = "top"
+    else:
+        priority = "medium"
     articles_data = api.latest_api(q="education", category=["education"],
-                                   country="us", language="en", prioritydomain="top",
+                                   country="us", language="en", prioritydomain=priority,
                                    scroll=True, max_result=50)
 
     filtered_articles = []
@@ -143,7 +147,7 @@ def reduce_articles_batch(articles):
     return reduced_articles
 
 
-def get_all_articles():
+def get_all_articles(outlets_popularity):
     bing_articles = []
 
     for company_name in companies:
@@ -151,7 +155,7 @@ def get_all_articles():
         bing_articles_batch = get_bing_news(search_term)
         bing_articles.extend(bing_articles_batch)
 
-    newsapi_articles = get_newsapi_articles()
+    newsapi_articles = get_newsapi_articles(outlets_popularity)
     all_articles = bing_articles + newsapi_articles
 
     chunk_size = 20
