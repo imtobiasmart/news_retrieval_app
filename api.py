@@ -147,10 +147,10 @@ def reduce_articles_batch(articles):
     return reduced_articles
 
 
-def get_all_articles(outlets_popularity):
+def get_all_articles(outlets_popularity, companies_list):
     bing_articles = []
 
-    for company_name in companies:
+    for company_name in companies_list:
         search_term = f'"{company_name}" education'
         bing_articles_batch = get_bing_news(search_term)
         bing_articles.extend(bing_articles_batch)
