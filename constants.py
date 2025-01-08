@@ -41,6 +41,12 @@ companies = [
 
 companies_list = ",".join(companies)
 
-education_terms = ["education", "edtech", "school", "university", "learning",
-                   "student", "teacher", "study", "professor", "class",
-                   "skill", "course", "college", "tutor"]
+education_terms = [
+    "education", "learning", "teaching", "pedagogy", "curriculum", "school", "classroom",
+    "student", "teacher", "university", "college", "assessment", "skill", "literacy",
+    "STEM", "academic", "training", "instruction", "educator", "higher education",
+    "K-12", "early childhood", "vocational", "e-learning", "online learning", "tutoring",
+    "homework", "syllabus", "scholarship", "degree", "diploma", "enrollment", "graduation",
+    "course", "lesson", "lecture", "exam", "test", "grading", "educational technology",
+    "classroom management", "education policy", "academic research"
+]
