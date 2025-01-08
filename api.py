@@ -3,7 +3,6 @@ import json
 import streamlit as st
 from dateutil.parser import isoparse
 from duckduckgo_search import DDGS
-from newsdataapi import NewsDataApiClient
 from openai import OpenAI
 
 from constants import education_terms, companies
@@ -109,7 +108,7 @@ def reduce_articles_batch(articles):
 def get_all_articles(companies_list):
     all_results = []
     for company in companies_list:
-        query = f'+education news \"{company}\"'
+        query = f'+education \"{company}\"'
         results = get_ddg_news(query)
         all_results.extend(results)
 
