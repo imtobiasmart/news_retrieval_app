@@ -1,4 +1,5 @@
 import json
+import re
 
 import streamlit as st
 from dateutil.parser import isoparse
@@ -100,8 +101,14 @@ def reduce_articles_batch(articles):
                    "content": "You are an AI assistant that filters and prioritizes education-related news articles"},
                   {"role": "user", "content": prompt}]
     )
-    content =  response.choices[0].message.content
-    reduced_articles = json.loads(content)
+    # Assuming `content` contains the model's raw response
+    content = response.choices[0].message.content.strip()
+
+    # Use regex to extract the JSON array inside square brackets
+    json_match = re.search(r"\[.*]", content, re.DOTALL)
+
+    json_string = json_match.group(0)  # Extract the JSON array
+    reduced_articles = json.loads(json_string)
     return reduced_articles
 
 
