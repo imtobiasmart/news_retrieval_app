@@ -77,6 +77,7 @@ def reduce_articles_batch(articles):
         - Are important or broadly newsworthy, reflecting U.S. or global trends (avoid highly localized or niche events).
         - Exclude articles containing extremely negative or sensitive content (e.g., school shootings).
         - Exclude articles that do not indicate a significant development or trend in education.
+        - Exclude duplicate articles, if there is more than one article with the same title, select the one with more credible source.
         
         Output the chosen articles only in a JSON-like list of 8-15 objects with the keys:
         "title"
