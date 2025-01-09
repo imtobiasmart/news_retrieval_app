@@ -41,10 +41,10 @@ def get_serper_news(query):
     response = requests.request("POST", url, headers=headers, data=payload)
 
     if response.status_code != 200:
-        raise Exception(f"Brave API request failed with status {response.status_code}: {response.text}")
+        raise Exception(f"Serper API request failed with status {response.status_code}: {response.text}")
 
     data = response.json()
-    articles = data.get("news", [])  # Extract the news articles
+    articles = data.get("news", [])
 
     filtered_articles = []
 
@@ -123,11 +123,11 @@ def reduce_articles_batch(articles):
 def get_all_articles(companies_list):
     all_results = []
     for company in companies_list:
-        query = f'+education \"{company}\"'
+        query = company
         results = get_serper_news(query)
         all_results.extend(results)
 
-    all_results.extend(get_serper_news('"education"'))
+    all_results.extend(get_serper_news('education'))
 
     # Remove duplicates based on the title
     unique_articles = []
