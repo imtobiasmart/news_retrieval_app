@@ -1,5 +1,6 @@
 import json
 
+import requests
 import streamlit as st
 from dateutil.parser import isoparse
 from duckduckgo_search import DDGS
@@ -18,42 +19,55 @@ def article_is_education_related(title, description):
     return any(term in text_lower for term in education_terms)
 
 
-def get_ddg_news(query):
+def get_serper_news(query):
     """
-    Fetches news articles for the given query using DuckDuckGo's 'DDGS().news',
+    Fetches news articles for the given query using Serper API,
     then filters the articles to only include those that match your
     'article_is_education_related' criteria.
     """
+    url = "https://google.serper.dev/news"
+
+    payload = json.dumps({
+        "q": query,
+        "location": "United States",
+        "num": 100,
+        "tbs": "qdr:d"
+    })
+    headers = {
+        'X-API-KEY': st.secrets["SERPER_API_KEY"],
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    if response.status_code != 200:
+        raise Exception(f"Brave API request failed with status {response.status_code}: {response.text}")
+
+    data = response.json()
+    articles = data.get("news", [])  # Extract the news articles
 
     filtered_articles = []
-    with DDGS() as ddgs:
-        results = ddgs.news(
-            keywords=query,
-            region="us-en",  # Specify your region
-            timelimit="d",  # 'd' = last 24 hours
-            max_results=100  # Max number of results to fetch
-        )
 
-        for r in results:
-            title = r.get("title", "")
-            description = r.get("body", "")
-            url = r.get("url", "")
-            source = r.get("source", "")
-            pub_date_str = r.get("date", "")
+    for article in articles:
+        title = article.get("title", "")
+        description = article.get("snippet", "")
+        url = article.get("link", "")
+        source = article.get("source", {})
+        pub_date_str = article.get("date", "")
 
-            try:
-                pub_date = isoparse(pub_date_str)
-            except (ValueError, TypeError):
-                pub_date = None
+        try:
+            pub_date = isoparse(pub_date_str)
+        except (ValueError, TypeError):
+            pub_date = None
 
-            if article_is_education_related(title, description):
-                filtered_articles.append({
-                    "title": title,
-                    "url": url,
-                    "description": description,
-                    "publishedAt": pub_date.isoformat() if pub_date else "",
-                    "source": source
-                })
+        if article_is_education_related(title, description):
+            filtered_articles.append({
+                "title": title,
+                "url": url,
+                "description": description,
+                "publishedAt": pub_date.isoformat() if pub_date else "",
+                "source": source
+            })
 
     return filtered_articles
 
@@ -95,8 +109,6 @@ def reduce_articles_batch(articles):
         [{{"title":"...", "url":"...", "description":"...", "publishedAt":"...", "source":"..."}}, ...]
     """
 
-    print(articles)
-
     response = client.chat.completions.create(
         model="chatgpt-4o-latest",
         messages=[{"role": "system",
@@ -105,9 +117,6 @@ def reduce_articles_batch(articles):
     )
     content = response.choices[0].message.content.strip()
     reduced_articles = json.loads(content)
-
-    print(reduced_articles)
-    print()
     return reduced_articles
 
 
@@ -115,15 +124,24 @@ def get_all_articles(companies_list):
     all_results = []
     for company in companies_list:
         query = f'+education \"{company}\"'
-        results = get_ddg_news(query)
+        results = get_serper_news(query)
         all_results.extend(results)
 
-    all_results.extend(get_ddg_news('"education"'))
+    all_results.extend(get_serper_news('"education"'))
+
+    # Remove duplicates based on the title
+    unique_articles = []
+    seen_titles = set()
+
+    for article in all_results:
+        if article["title"] not in seen_titles:
+            unique_articles.append(article)
+            seen_titles.add(article["title"])
 
     chunk_size = 20
     reduced_all = []
-    if len(all_results) > chunk_size:
-        for chunk in chunk_list(all_results, chunk_size):
+    if len(unique_articles) > chunk_size:
+        for chunk in chunk_list(unique_articles, chunk_size):
             reduced_chunk = reduce_articles_batch(chunk)
             reduced_all.extend(reduced_chunk)
 
