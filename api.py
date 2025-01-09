@@ -116,6 +116,8 @@ def reduce_articles_batch(articles):
                   {"role": "user", "content": prompt}]
     )
     content =  response.choices[0].message.content
+
+    print(content)
     reduced_articles = json.loads(content)
     return reduced_articles
 
