@@ -66,24 +66,24 @@ def chunk_list(lst, size):
 def reduce_articles_batch(articles):
     articles_text = ""
     for i, art in enumerate(articles, start=1):
-        articles_text += f"\nArticle {i}:\nTitle: {art['title']}\nSummary: {art['description']}\nURL: {art['url']}\nPublishedAt: {art['publishedAt']}\nSources: {art['sources']}\n"
+        articles_text += f"\nArticle {i}:\nTitle: {art['title']}\nSummary: {art['description']}\nURL: {art['url']}\nPublishedAt: {art['publishedAt']}\nSource: {art['source']}\n"
 
     prompt = f"""
         Role: You are an AI assistant that filters and prioritizes education-related news articles for an education-focused venture capital firm’s newsletter.
         Task:
         You are given a list of articles.
-        Select exactly 10 articles that meet all of the following criteria:
+        Select 8-15 articles that meet all of the following criteria:
         - Primarily cover education news.
         - Are important or broadly newsworthy, reflecting U.S. or global trends (avoid highly localized or niche events).
         - Exclude articles containing extremely negative or sensitive content (e.g., school shootings).
         - Exclude articles that do not indicate a significant development or trend in education.
         
-        Output the chosen articles only in a JSON-like list of 10 objects with the keys:
+        Output the chosen articles only in a JSON-like list of 8-15 objects with the keys:
         "title"
         "url"
         "description"
         "publishedAt"
-        "sources"
+        "source"
         
         Do not include anything else in your final output—no explanations, no extra text.
         
@@ -91,7 +91,7 @@ def reduce_articles_batch(articles):
         {articles_text}
         
         Output format:
-        [{{"title":"...", "url":"...", "description":"...", "publishedAt":"...", "sources":"..."}}, ...]
+        [{{"title":"...", "url":"...", "description":"...", "publishedAt":"...", "source":"..."}}, ...]
     """
 
     response = client.chat.completions.create(
@@ -114,7 +114,14 @@ def get_all_articles(companies_list):
 
     all_results.extend(get_ddg_news('"education"'))
 
-    return all_results
+    chunk_size = 20
+    reduced_all = []
+    if len(all_results) > chunk_size:
+        for chunk in chunk_list(all_results, chunk_size):
+            reduced_chunk = reduce_articles_batch(chunk)
+            reduced_all.extend(reduced_chunk)
+
+    return reduced_all
 
 
 def create_final_newsletter_prompt(articles):
