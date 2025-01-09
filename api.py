@@ -95,14 +95,19 @@ def reduce_articles_batch(articles):
         [{{"title":"...", "url":"...", "description":"...", "publishedAt":"...", "source":"..."}}, ...]
     """
 
+    print(articles)
+
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4o",
         messages=[{"role": "system",
                    "content": "You are an AI assistant that filters and prioritizes education-related news articles"},
                   {"role": "user", "content": prompt}]
     )
     content = response.choices[0].message.content.strip()
     reduced_articles = json.loads(content)
+
+    print(reduced_articles)
+    print()
     return reduced_articles
 
 
