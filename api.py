@@ -112,7 +112,7 @@ def reduce_articles_batch(articles):
     response = client.chat.completions.create(
         model="chatgpt-4o-latest",
         messages=[{"role": "system",
-                   "content": "You are an AI assistant that filters and prioritizes education-related news articles"},
+                   "content": "You are an AI assistant that filters and prioritizes education-related news articles strictly in JSON format."},
                   {"role": "user", "content": prompt}]
     )
     content =  response.choices[0].message.content
