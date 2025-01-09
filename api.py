@@ -120,10 +120,19 @@ def get_all_articles(companies_list):
 
     all_results.extend(get_ddg_news('"education"'))
 
+    # Remove duplicates based on the title
+    unique_articles = []
+    seen_titles = set()
+
+    for article in all_results:
+        if article["title"] not in seen_titles:
+            unique_articles.append(article)
+            seen_titles.add(article["title"])
+
     chunk_size = 20
     reduced_all = []
-    if len(all_results) > chunk_size:
-        for chunk in chunk_list(all_results, chunk_size):
+    if len(unique_articles) > chunk_size:
+        for chunk in chunk_list(unique_articles, chunk_size):
             reduced_chunk = reduce_articles_batch(chunk)
             reduced_all.extend(reduced_chunk)
 
