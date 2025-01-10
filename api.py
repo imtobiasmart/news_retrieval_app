@@ -1,5 +1,5 @@
 import json
-import re
+from pydantic import BaseModel
 
 import streamlit as st
 from dateutil.parser import isoparse
@@ -11,6 +11,18 @@ from constants import education_terms, companies
 client = OpenAI(
     api_key=st.secrets["OPENAI_API_KEY"],
 )
+
+
+class Article(BaseModel):
+    title: str
+    url: str
+    description: str
+    publishedAt: str
+    source: str
+
+
+class NewsArticles(BaseModel):
+    articles: list[Article]
 
 
 def article_is_education_related(title, description):
@@ -67,20 +79,27 @@ def chunk_list(lst, size):
 def reduce_articles_batch(articles):
     articles_text = ""
     for i, art in enumerate(articles, start=1):
+        print(art['source'])
         articles_text += f"\nArticle {i}:\nTitle: {art['title']}\nSummary: {art['description']}\nURL: {art['url']}\nPublishedAt: {art['publishedAt']}\nSource: {art['source']}\n"
-
+    print("source before the prompt ended")
+    print()
     prompt = f"""
         Role: You are an AI assistant that filters and prioritizes education-related news articles for an education-focused venture capital firm’s newsletter.
         Task:
         You are given a list of articles.
-        Select 8-15 articles that meet all of the following criteria:
+        Select at 8-12 articles that meet all of the following criteria:
         - Primarily cover education news.
         - Are important or broadly newsworthy, reflecting U.S. or global trends (avoid highly localized or niche events).
         - Exclude articles containing extremely negative or sensitive content (e.g., school shootings).
         - Exclude articles that do not indicate a significant development or trend in education.
         - Exclude duplicate articles, if there is more than one article with the same title, select the one with more credible source.
+        - If there are news from the best sources (Education Week, EdTech, eSchool News, EdSurge, Chalkbeat, 
+        The Associated Press, Inside Higher Ed, EdSource, The Hechinger Report, Forbes, Brookings, Edutopia, 
+        The Chronicle of Higher Education, The 74, Working Nation, KQED, TechCrunch, World Economic Forum), they must 
+        be included in the selection.
+        - Remove any articles which source is related to country other than the United States.
         
-        Output the chosen articles only in a JSON-like list of 8-15 objects with the keys:
+        Output the chosen articles only in a JSON-like list of objects with the keys:
         "title"
         "url"
         "description"
@@ -95,20 +114,18 @@ def reduce_articles_batch(articles):
         Output format:
         [{{"title":"...", "url":"...", "description":"...", "publishedAt":"...", "source":"..."}}, ...]
     """
-    response = client.chat.completions.create(
-        model="chatgpt-4o-latest",
+    response = client.beta.chat.completions.parse(
+        model="gpt-4o-2024-08-06",
         messages=[{"role": "system",
-                   "content": "You are an AI assistant that filters and prioritizes education-related news articles"},
-                  {"role": "user", "content": prompt}]
+                   "content": "You are an AI assistant that filters and prioritizes education-related news articles and returns them in json"},
+                  {"role": "user", "content": prompt}],
+        response_format=NewsArticles
     )
-    # Assuming `content` contains the model's raw response
-    content = response.choices[0].message.content.strip()
-
-    # Use regex to extract the JSON array inside square brackets
-    json_match = re.search(r"\[.*]", content, re.DOTALL)
-
-    json_string = json_match.group(0)  # Extract the JSON array
-    reduced_articles = json.loads(json_string)
+    content = response.choices[0].message.content
+    reduced_articles = json.loads(content)["articles"]
+    for art in reduced_articles:
+        print(art['source'])
+    print("source after the prompt ended\n")
     return reduced_articles
 
 
@@ -215,9 +232,8 @@ def generate_newsletter(all_articles):
 
     # 3. Send the prompt to GPT to create the newsletter
     response = client.chat.completions.create(
-        model="chatgpt-4o-latest",
+        model="o1-preview",
         messages=[
-            {"role": "system", "content": "You are an AI newsletter writer for an education-focused venture fund."},
             {"role": "user", "content": final_prompt}
         ]
     )

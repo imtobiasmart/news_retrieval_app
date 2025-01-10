@@ -18,7 +18,7 @@ if st.button("Generate Newsletter"):
     st.markdown("## Articles")
     for article in articles:
         st.markdown(
-            f"[{article['title']}]({article['url']}) - {article['publishedAt']}"
+            f"{article['title']} [{article['source']}]({article['url']}) - {article['publishedAt']}"
         )
     st.write("---")
     st.markdown("## Generated Newsletter")
