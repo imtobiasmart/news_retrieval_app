@@ -48,4 +48,12 @@ education_terms = [
     "k-12", "early childhood", "vocational", "e-learning", "online learning", "tutoring",
     "homework", "syllabus", "scholarship", "degree", "diploma", "enrollment", "graduation",
     "course", "lesson", "lecture", "exam", "educational technology",
-    "classroom management", "education policy", "academic research", "edtech"]
+    "classroom management", "education policy", "academic research", "edtech", "ed-tech", "ed tech"]
+
+finance_keywords = [
+    "valuation", "financing", "funding", "capital", "raise", "investment", "ipo",
+    "seed round", "series a", "series b", "series c", "venture", "equity", "debt",
+    "acquisition", "merger", "fundraise"
+]
+
+
